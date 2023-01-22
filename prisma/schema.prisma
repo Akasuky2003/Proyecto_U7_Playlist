@@ -9,3 +9,40 @@ datasource db {
   provider = "sqlite"
   url      = env("DATABASE_URL")
 }
+model User {
+  id Int @id @default(autoincrement())
+  name String? @unique
+  email String? @unique
+  password String?
+  last_session DateTime @default(now())
+  updated_at DateTime @updatedAt
+  date_born DateTime @default(now())
+  playlists Playlist[]
+}
+model Song{
+  id Int @id @default(autoincrement())
+  name String? @unique
+  artist String? @unique
+  album String? @unique
+  year Int
+  genero String?
+  duration Int?
+  estado Boolean @default(false)
+  music Music[]
+}
+model Playlist{
+  id Int @id @default(autoincrement())
+  name String? @unique
+  user_id User @relation(fields: [user],references: [id])
+  user Int
+}
+model Music{
+  id_song Song @relation(fields: [id],references: [id])
+  id Int @id
+  name String? @unique
+  artist String? @unique
+  album String? @unique
+  year Int
+  genre String?
+  duration Int
+}
