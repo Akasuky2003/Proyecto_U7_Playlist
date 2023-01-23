@@ -19,6 +19,7 @@ model User {
   date_born DateTime @default(now())
   playlists Playlist[]
 }
+
 model Song{
   id Int @id @default(autoincrement())
   name String @unique
@@ -30,15 +31,18 @@ model Song{
   estado Boolean @default(false)
   music Music[]
 }
+
 model Playlist{
   id Int @id @default(autoincrement())
   name String @unique
   user_id User @relation(fields: [user],references: [id])
   user Int
-  
+  music Music[]
 }
+
 model Music{
-  
+  playlist_id Playlist @relation(fields: [playlist], references: [id])
+  playlist Int
   id_song Song @relation(fields: [id],references: [id])
   id Int @id
   name String @unique
