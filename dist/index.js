@@ -50,7 +50,7 @@ dotenv.config();
 const app = (0, express_1.default)();
 /*Usaremos JSON*/
 app.use(express_1.default.json());
-app.post('/api/v1//users', (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+app.post('/api/v1/users', (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const SaltRounds = 10;
     const { name, email, password } = req.body;
     const hash = bcrypt.hashSync(password, SaltRounds);
