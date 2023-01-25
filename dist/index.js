@@ -47,7 +47,6 @@ dotenv.config();
 const PORT = process.env.PORT;
 /*Config*/
 const prisma = new client_1.PrismaClient();
-dotenv.config();
 const app = (0, express_1.default)();
 /*Usaremos Cors */
 app.use((0, cors_1.default)());
@@ -71,7 +70,7 @@ app.post('/api/v1/users', (req, res) => __awaiter(void 0, void 0, void 0, functi
         res.status(201).json(user);
     }
     catch (_a) {
-        res.status(500).json({ message: 'Error en al crear usuario' });
+        res.status(500).json({ message: 'Error en crear usuario' });
     }
 }));
 app.post('/api/v1/login', (req, res) => __awaiter(void 0, void 0, void 0, function* () {
@@ -108,10 +107,10 @@ function verifyToken(req, res, next) {
     const ACCESS_TOKEN_SECRET = process.env.ACCESS_TOKEN_SECRET || "";
     const token = req.headers['authorization'];
     if (!token)
-        return res.status(401).send({ auth: false, message: 'No token provided.' });
+        return res.status(401).send({ auth: false, message: 'Token no proporcionado.' });
     jwt.verify(token, ACCESS_TOKEN_SECRET, function (err, decoded) {
         if (err)
-            return res.status(500).send({ auth: false, message: 'Failed to authenticate token.' });
+            return res.status(500).send({ auth: false, message: 'fallo en la autentificacion del token.' });
         req.userId = decoded.id;
         next();
     });
@@ -147,7 +146,6 @@ function verifyTokenSong(req, res, next) {
 app.get('/api/v1/songs', verifyTokenSong, (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         if (!req.userId) {
-            // si el usuario no está autenticado, solo devuelve canciones con estado true
             const songs = yield prisma.song.findMany({
                 where: {
                     estado: true
@@ -156,7 +154,6 @@ app.get('/api/v1/songs', verifyTokenSong, (req, res) => __awaiter(void 0, void 0
             res.status(200).json(songs);
         }
         else {
-            // si el usuario está autenticado, devuelve todas las canciones
             const songs = yield prisma.song.findMany();
             res.status(200).json(songs);
         }
@@ -174,7 +171,7 @@ app.get('/api/v1/songs/:id', (req, res) => __awaiter(void 0, void 0, void 0, fun
             }
         });
         if (!song) {
-            return res.status(404).json({ message: 'song not found' });
+            return res.status(404).json({ message: 'no se encontro musica' });
         }
         res.status(200).json(song);
     }
@@ -197,7 +194,7 @@ app.post('/api/v1/playlist', verifyToken, (req, res) => __awaiter(void 0, void 0
         return res.status(500).json({ message: "error en servidor", error: err.message });
     }
 }));
-app.post('/api/v1laylist/song/p', verifyToken, (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+app.post('/api/v1/playlist/song', verifyToken, (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const { id_playlist, id_song } = req.body;
         const song = yield prisma.song.findFirstOrThrow({
@@ -233,5 +230,5 @@ app.post('/api/v1laylist/song/p', verifyToken, (req, res) => __awaiter(void 0, v
 }));
 /*Asignamos puerto*/
 app.listen(PORT, () => {
-    console.log(`Express server listening on port http://localhost:${PORT}`);
+    console.log(`Apliacacion ejecutandose en http://localhost:${PORT}`);
 });
