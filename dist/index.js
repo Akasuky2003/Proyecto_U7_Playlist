@@ -100,7 +100,7 @@ app.post('/api/v1/login', (req, res) => __awaiter(void 0, void 0, void 0, functi
     }
     catch (err) {
         console.log(err.message);
-        return res.status(500).json({ message: "error en el servidor", error: err.message });
+        return res.status(500).json({ message: "Error en el servidor", error: err.message });
     }
 }));
 function verifyToken(req, res, next) {
@@ -110,7 +110,7 @@ function verifyToken(req, res, next) {
         return res.status(401).send({ auth: false, message: 'Token no proporcionado.' });
     jwt.verify(token, ACCESS_TOKEN_SECRET, function (err, decoded) {
         if (err)
-            return res.status(500).send({ auth: false, message: 'fallo en la autentificacion del token.' });
+            return res.status(500).send({ auth: false, message: 'Fallo en la autentificacion del token.' });
         req.userId = decoded.id;
         next();
     });
@@ -171,13 +171,13 @@ app.get('/api/v1/songs/:id', (req, res) => __awaiter(void 0, void 0, void 0, fun
             }
         });
         if (!song) {
-            return res.status(404).json({ message: 'no se encontro musica' });
+            return res.status(404).json({ message: 'No se encontro musica' });
         }
         res.status(200).json(song);
     }
     catch (err) {
         console.log(err.message);
-        return res.status(500).json({ message: "error en servidor", error: err.message });
+        return res.status(500).json({ message: "Error en servidor", error: err.message });
     }
 }));
 app.post('/api/v1/playlist', verifyToken, (req, res) => __awaiter(void 0, void 0, void 0, function* () {
@@ -191,7 +191,7 @@ app.post('/api/v1/playlist', verifyToken, (req, res) => __awaiter(void 0, void 0
     }
     catch (err) {
         console.log(err.message);
-        return res.status(500).json({ message: "error en servidor", error: err.message });
+        return res.status(500).json({ message: "Error en servidor", error: err.message });
     }
 }));
 app.post('/api/v1/playlist/song', verifyToken, (req, res) => __awaiter(void 0, void 0, void 0, function* () {
@@ -230,5 +230,5 @@ app.post('/api/v1/playlist/song', verifyToken, (req, res) => __awaiter(void 0, v
 }));
 /*Asignamos puerto*/
 app.listen(PORT, () => {
-    console.log(`Apliacacion ejecutandose en http://localhost:${PORT}`);
+    console.log(`Aplicación ejecutandose en http://localhost:${PORT}`);
 });
