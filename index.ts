@@ -204,5 +204,5 @@ app.post('/api/v1/playlist/song',verifyToken, async (req: Request, res: Response
 });
 /*Asignamos puerto*/
 app.listen(PORT, () => {
-    console.log(`Apliacacion ejecutandose en http://localhost:${PORT}`)
+    console.log(`Aplicacion ejecutandose en http://localhost:${PORT}`)
 });
