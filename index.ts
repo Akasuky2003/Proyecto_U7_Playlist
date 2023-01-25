@@ -87,10 +87,10 @@ function verifyToken(req: Request, res: Response, next: NextFunction) {
 }
 
 app.post('/api/v1/songs',verifyToken,async(req:Request,res:Response) => {
-    const {name,artist,album,year,genero,duration} = req.body;
+    const {name,artist,album,year,genero,duration,estado} = req.body;
      try {
         const musica= await prisma.song.create({
-            data:{name,artist,album,year,genero,duration}
+            data:{name,artist,album,year,genero,duration,estado}
         });
         res.status(201).json(musica);
     }
@@ -153,13 +153,22 @@ app.get('/api/v1/songs/:id', async ( req: Request,res: Response) => {
 });
 
 app.post('/api/v1/playlist',verifyToken, async (req: Request, res: Response) => {
-    const {name,user}=req.body;
-    const playlist=await prisma.playlist.create({
-        data:{name,user}
+    try{
+        const {name}=req.body;
+        const user_id = req.userId;
+        const playlist=await prisma.playlist.create({
+            data:{name,user:user_id}
     });
     res.status(201).json(playlist);
+
+    }catch(err:any){
+        console.log(err.message)
+        return res.status(500).json({ message: "error en servidor", error: err.message });
+
+    }
 });
-app.post('/api/v1/playlist/song',verifyToken, async (req: Request, res: Response) => {
+
+app.post('/api/v1laylist/song/p',verifyToken, async (req: Request, res: Response) => {
     try {
         const {id_playlist,id_song}=req.body;
         const song = await prisma.song.findFirstOrThrow({
