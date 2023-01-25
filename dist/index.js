@@ -39,6 +39,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const express_1 = __importDefault(require("express"));
 const dotenv = __importStar(require("dotenv"));
 const client_1 = require(".prisma/client");
+const cors_1 = __importDefault(require("cors"));
 const bcrypt = __importStar(require("bcrypt"));
 const jwt = __importStar(require("jsonwebtoken"));
 dotenv.config();
@@ -48,8 +49,11 @@ const PORT = process.env.PORT;
 const prisma = new client_1.PrismaClient();
 dotenv.config();
 const app = (0, express_1.default)();
+/*Usaremos Cors */
+app.use((0, cors_1.default)());
 /*Usaremos JSON*/
 app.use(express_1.default.json());
+/**/
 app.post('/api/v1/users', (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const SaltRounds = 10;
     const { name, email, password } = req.body;
@@ -100,30 +104,64 @@ app.post('/api/v1/login', (req, res) => __awaiter(void 0, void 0, void 0, functi
         return res.status(500).json({ message: "error en el servidor", error: err.message });
     }
 }));
-app.post('/api/v1/songs', (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    const { name, artist, album, year, genero, duration } = req.body;
-    const musica = yield prisma.song.create({
-        data: { name, artist, album, year, genero, duration }
+function verifyToken(req, res, next) {
+    const ACCESS_TOKEN_SECRET = process.env.ACCESS_TOKEN_SECRET || "";
+    const token = req.headers['authorization'];
+    if (!token)
+        return res.status(401).send({ auth: false, message: 'No token provided.' });
+    jwt.verify(token, ACCESS_TOKEN_SECRET, function (err, decoded) {
+        if (err)
+            return res.status(500).send({ auth: false, message: 'Failed to authenticate token.' });
+        req.userId = decoded.id;
+        next();
     });
-    res.status(201).json(musica);
-    // try {
-    //     const musica= await prisma.song.create({
-    //         data:{name,artist,album,year,genero,duration,estado}
-    //     });
-    //     res.status(201).json(musica);
-    // }
-    // catch (err:any) {
-    //     console.log(err.message)
-    //     return res.status(500).json({ message:"error en servidor" ,error: err.message  });
-    // }
-}));
-app.get('/api/v1/songs', (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+}
+app.post('/api/v1/songs', verifyToken, (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const { name, artist, album, year, genero, duration } = req.body;
     try {
-        const songs = yield prisma.song.findMany();
-        res.status(200).json(songs);
+        const musica = yield prisma.song.create({
+            data: { name, artist, album, year, genero, duration }
+        });
+        res.status(201).json(musica);
     }
     catch (err) {
-        console.log(err);
+        console.log(err.message);
+        return res.status(500).json({ message: "error en servidor", error: err.message });
+    }
+}));
+function verifyTokenSong(req, res, next) {
+    const token = req.headers['authorization'];
+    if (!token) {
+        req.userId = undefined;
+        return next();
+    }
+    jwt.verify(token, process.env.ACCESS_TOKEN_SECRET || "", function (err, decoded) {
+        if (err) {
+            req.userId = undefined;
+            return next();
+        }
+        req.userId = decoded.id;
+        next();
+    });
+}
+app.get('/api/v1/songs', verifyTokenSong, (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        if (!req.userId) {
+            // si el usuario no está autenticado, solo devuelve canciones con estado true
+            const songs = yield prisma.song.findMany({
+                where: {
+                    estado: true
+                }
+            });
+            res.status(200).json(songs);
+        }
+        else {
+            // si el usuario está autenticado, devuelve todas las canciones
+            const songs = yield prisma.song.findMany();
+            res.status(200).json(songs);
+        }
+    }
+    catch (err) {
         res.status(500).json({ message: "Error al obtener las canciones" });
     }
 }));
@@ -145,33 +183,45 @@ app.get('/api/v1/songs/:id', (req, res) => __awaiter(void 0, void 0, void 0, fun
         return res.status(500).json({ message: "error en servidor", error: err.message });
     }
 }));
-app.post('/api/v1/playlist', (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    const { songId, playlistName } = req.body;
+app.post('/api/v1/playlist', verifyToken, (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const { name, user } = req.body;
+    const playlist = yield prisma.playlist.create({
+        data: { name, user }
+    });
+    res.status(201).json(playlist);
+}));
+app.post('/api/v1/playlist/song', verifyToken, (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
+        const { id_playlist, id_song } = req.body;
         const song = yield prisma.song.findFirstOrThrow({
-            where: {
-                id: songId
-            }
+            where: { id: id_song }
         });
         if (!song) {
-            return res.status(404).json({ message: 'song not found' });
+            return res.status(404).json({ message: "Canción no encontrada" });
         }
-        const playlist = yield prisma.playlist.create({
+        const listasong = yield prisma.playlist.findFirstOrThrow({
+            where: { id: id_playlist }
+        });
+        if (!listasong) {
+            return res.status(404).json({ message: "Lista no encontrada" });
+        }
+        yield prisma.music.create({
             data: {
-                name: playlistName,
-                user: 1,
-                music: {
-                    connect: {
-                        id: songId
-                    }
-                }
+                playlist: { connect: { id: parseInt(id_playlist) } },
+                song: { connect: { id: id_song } },
+                name: song.name,
+                artist: song.artist,
+                album: song.album,
+                year: song.year,
+                genero: song.genero,
+                duration: song.duration
             }
         });
-        return res.status(201).json({ message: 'song added to playlist', playlist });
+        res.status(200).json({ message: "Canción agregada a la lista de reproducción" });
     }
     catch (err) {
         console.log(err);
-        return res.status(500).json({ message: 'An error occurred while adding the song to the playlist' });
+        res.status(500).json({ message: "Error al agregar canción" });
     }
 }));
 /*Asignamos puerto*/

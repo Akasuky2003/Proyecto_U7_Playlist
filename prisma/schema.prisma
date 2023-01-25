@@ -28,7 +28,7 @@ model Song{
   year Int
   genero String
   duration Int
-  estado Boolean @default(false)
+  estado Boolean @default(true)
   music Music[]
 }
 
@@ -41,14 +41,14 @@ model Playlist{
 }
 
 model Music{
-  playlist_id Playlist @relation(fields: [playlist], references: [id])
-  playlist Int
-  id_song Song @relation(fields: [id],references: [id])
+  playlist Playlist @relation(fields: [playlist_id], references: [id])
+  playlist_id Int
+  song Song @relation(fields: [id],references: [id])
   id Int @id
   name String @unique
   artist String @unique
   album String @unique
   year Int
-  genre String
+  genero String
   duration Int
 }
